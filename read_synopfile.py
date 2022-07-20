@@ -12,7 +12,7 @@ def read(synop_file):
     2. Sends the first row of input file to read_filename to get the name for the
        output file. After that it checks if output has a right number of values for naming
        the file.
-    3. Calls read_synop to get keys and values from input file.
+    3. Calls read_synop to get the keys and the values from input file.
     """
 
     # 1.
