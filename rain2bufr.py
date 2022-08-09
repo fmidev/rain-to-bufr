@@ -192,7 +192,7 @@ def bufr_encode(ibufr, subs):
     codes_set_array(ibufr, 'heightOfStationGroundAboveMeanSeaLevel', subs.ELSTAT)
     codes_set_array(ibufr, 'heightOfSensorAboveLocalGroundOrDeckOfMarinePlatform', subs.SENSOR)
     codes_set_array(ibufr, 'airTemperature', subs.T)
-    codes_set_array(ibufr, 'methodOfSnowDepthMeasurement', subs.MSD)
+    codes_set_array(ibufr, 'methodOfSnowDepthMeasurement', subs.METHODSNOW)
     codes_set_array(ibufr, 'stateOfGround', subs.GR)
     codes_set_array(ibufr, 'totalSnowDepth', subs.SNOW_TOTAL)
 

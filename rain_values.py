@@ -34,6 +34,8 @@ class Subset:
             miss_char_list.append('')
         self.TTAAII = miss_list
         # self.ELANEM = str2float(miss_list, oli 1)
+        self.ELGROUND = str2float(miss_list, 0)
+        self.ELSNOW = str2float(miss_list, 0)
         self.ELSTAT = str2float(miss_list, 0)
         # self.ELTERM = str2float(miss_list, oli 4)
         self.LAT = str2float(miss_list, 0)
@@ -56,7 +58,8 @@ class Subset:
         self.SNOW18 = str2float(miss_list, 6)
         self.SNOW_AWS = str2float(miss_list, 6)
         self.SNOW_MAN = str2float(miss_list, 6)
-        self.SNOW = [self.SNOW06, self.SNOW18, self.SNOW_MAN, self.SNOW_AWS]
+        self.SNOW = str2float(miss_list, 6)
+        self.SNOW_ARRAY = [self.SNOW06, self.SNOW18, self.SNOW_MAN, self.SNOW_AWS, self.SNOW]
         self.SWE = str2float(miss_list, 0)
         self.T = str2float(miss_list, 7)
         self.WSI_IDS = str2int(miss_list, 0)
@@ -71,6 +74,10 @@ class Subset:
                 self.TTAAII = v_a[k_a.index(key)]
             # elif key == 'ELANEM':
                 # self.ELANEM = str2float(v_a[k_a.index(key)], 1)
+            elif key == 'ELGROUND':
+                self.ELGROUND = str2float(v_a[k_a.index(key)], 0)
+            elif key == 'ELSNOW':
+                self.ELSNOW = str2float(v_a[k_a.index(key)], 0)
             elif key == 'ELSTAT':
                 self.ELSTAT = str2float(v_a[k_a.index(key)], 0)
             # elif key == 'ELTERM':
@@ -81,7 +88,7 @@ class Subset:
                 self.LON = str2float(v_a[k_a.index(key)], 0)
             elif key == 'NSN':
                 self.NSN = str2int(v_a[k_a.index(key)], 0)
-            elif key == 'LONG_STATION_NAME':
+            elif key == 'STATION_NAME':
                 self.LONG_STATION_NAME = str2str(v_a[k_a.index(key)])
             elif key == 'STATION_TYPE':
                 self.STATION_TYPE = str2int(v_a[k_a.index(key)], 0)
@@ -97,22 +104,25 @@ class Subset:
                 self.MI = str2int(v_a[k_a.index(key)], 0)
             elif key in ('MM', 'month'):
                 self.MM = str2int(v_a[k_a.index(key)], 0)
-            elif key == 'MSD':
-                self.MSD = str2int(v_a[k_a.index(key)], 4)
+            elif key == 'METHODSNOW':
+                self.METHODSNOW = str2int(v_a[k_a.index(key)], 4)
             elif key == 'MSWE':
                 self.MSWE = str2int(v_a[k_a.index(key)], 5)
             elif key == 'SNOW06':
                 self.SNOW06 = str2float(v_a[k_a.index(key)], 6)
-                self.SNOW[0] = self.SNOW06
+                self.SNOW_ARRAY[0] = self.SNOW06
             elif key == 'SNOW18':
                 self.SNOW18 = str2float(v_a[k_a.index(key)], 6)
-                self.SNOW[1] = self.SNOW18
+                self.SNOW_ARRAY[1] = self.SNOW18
             elif key == 'SNOW_MAN':
                 self.SNOW_MAN = str2float(v_a[k_a.index(key)], 6)
-                self.SNOW[2] = self.SNOW_MAN
+                self.SNOW_ARRAY[2] = self.SNOW_MAN
             elif key == 'SNOW_AWS':
                 self.SNOW_AWS = str2float(v_a[k_a.index(key)], 6)
-                self.SNOW[3] = self.SNOW_AWS
+                self.SNOW_ARRAY[3] = self.SNOW_AWS
+            elif key == 'SNOW':
+                self.SNOW = str2float(v_a[k_a.index(key)], 6)
+                self.SNOW_ARRAY[4] = self.SNOW
             elif key == 'STATEID':
                 self.STATEID = str2int(v_a[k_a.index(key)], 1)
             elif key == 'SWE':
@@ -131,9 +141,9 @@ class Subset:
 
     # 3.
         self.GR = ground_data(k_a, self.HH24, self.GROUND, self.GROUND06)
-        self.SNOW_TOTAL = snow_depth_total(self.HH24, k_a, self.GR, self.SNOW)
+        self.SNOW_TOTAL = snow_depth_total(self.HH24, k_a, self.GR, self.SNOW_ARRAY)
         self.SDLWC = get_snow_density(self.SNOW_TOTAL, self.SWE)
-        self.SENSOR = height_of_sensor(self.NSUB)
+        self.SENSOR = height_of_sensor(self.T, self.ELSNOW)
 
 # 4.
 
@@ -208,19 +218,23 @@ def get_snow_density(depth, water_equivalent):
                 density.append(s_d)
     return density
 
-def height_of_sensor(n_sub):
+def height_of_sensor(t_list, snow_sensor):
     """
     This function makes a list of all the height of sensor above local ground
     (or deck of marine platform). In Snow observation sequence 307101, height of
     sensor depends on:
-        In all the other bufr messages, the first value in subset is 2 and the
-        second value is MISSING.
-        However, maybe it should depend on eleterm or some data value??
+        In all the other rain bufr messages, the first value in subset is 2, which should be
+        the height of the temperature sensor. Maybe elterm should be used??
+        If the temperature measurement is missing, the height of temperature measurement is missing.
+        The second value is the height of snow measurement sensor (snow_sensor)??
     """
     float_list = []
-    while len(float_list) < n_sub*2:
-        float_list.append(2.00)
-        float_list.append(missD)
+    for i in range (0, len(t_list)):
+        if t_list[i] == missD:
+            float_list.append(missD)
+        else:
+            float_list.append(2.00)
+        float_list.append(snow_sensor[i])
     return float_list
 
 def ground_data(key_list, hh_list, list1, list2):
@@ -269,24 +283,27 @@ def snow_depth_total(hh_list, key_list, gr_list, snow_list):
     """
     This function makes a total list of snow depth. It depends on:
         hh_list = HH24 = hour of the measurement
-        key_list = to see if it includes SNOW06 or SNOW18 key names
+        key_list = to see if it includes SNOW06, SNOW18, SNOW_MAN or SNOW_AWS key names
         gr_list = GR = state of ground data
-        snow_list = SNOW = [SNOW06, SNOW18, SNOW_MAN, SNOW_AWS] = values of snow depth.
+        snow_list = SNOW = [SNOW06, SNOW18, SNOW_MAN, SNOW_AWS, SNOW] = values of snow depth.
     """
     float_list = []
-    snow06_list = snow_list[0]
-    snow18_list = snow_list[1]
-    snow_man_list = snow_list[2]
-    snow_aws_list = snow_list[3]
+    snow06_values = snow_list[0]
+    snow18_values = snow_list[1]
+    snow_man_values = snow_list[2]
+    snow_aws_values = snow_list[3]
+    snow_values = snow_list[4]
     for i in range(0, len(hh_list)):
         if 'SNOW06' in key_list and hh_list[i] == 5:
-            float_list.append(snow_depth(snow06_list[i], gr_list[i]))
+            float_list.append(snow_depth(snow06_values[i], gr_list[i]))
         elif 'SNOW18' in key_list and hh_list[i] == 17:
-            float_list.append(snow_depth(snow18_list[i], gr_list[i]))
+            float_list.append(snow_depth(snow18_values[i], gr_list[i]))
         elif 'SNOW_MAN' in key_list:
-            float_list.append(snow_depth(snow_man_list[i], gr_list[i]))
+            float_list.append(snow_depth(snow_man_values[i], gr_list[i]))
+        elif 'SNOW_AWS' in key_list:
+            float_list.append(snow_depth(snow_aws_values[i], gr_list[i]))
         else:
-            float_list.append(snow_depth(snow_aws_list[i], gr_list[i]))
+            float_list.append(snow_depth(snow_values[i], gr_list[i]))
     return float_list
 
 def make_missing(key_id):
@@ -294,7 +311,7 @@ def make_missing(key_id):
     This function gives right missing values according to key id:
         key_id = 1: For STATEDI = State identifier
         key_id = 2 or 3: For GR = state of ground data
-        key_id = 4: For MSD = method of snow depth measurement
+        key_id = 4: For METHODSNOW = method of snow depth measurement
         key_id = 5: For MSWE = method of snow water equivalent measurement
     """
     value = miss
