@@ -134,7 +134,7 @@ class Subset:
                 self.YYYY = str2int(v_a[k_a.index(key)], 0)
 
     # 3.
-        self.STATEID = makse_stateid(self.NSUB)
+        self.STATEID = make_stateid(self.NSUB)
         self.GR = ground_data(k_a, self.HH24, self.GROUND, self.GROUND06)
         self.SNOW_TOTAL = snow_depth_total(self.HH24, k_a, self.GR, self.SNOW_ARRAY)
         self.SDLWC = get_snow_density(self.SNOW_TOTAL, self.SWE)
@@ -142,11 +142,11 @@ class Subset:
 
 # 4.
 
-def makse_stateid(nsub):
+def make_stateid(nsub):
     """
     This function gives State identifier for each subset.
     In Finland, state identifier is 613. If this code is used to encode other
-    countries data, this functions need to be modified.
+    countries data, this function needs to be modified.
     """
     int_list =  []
     while len(int_list) < nsub:
