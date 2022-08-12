@@ -42,8 +42,7 @@ class Subset:
         self.LONG_STATION_NAME = miss_char_list
         self.SENSOR = str2float(miss_list, 0)
         self.STATION_TYPE = str2int(miss_list, 0)
-        self.STATEID = str2int(miss_list, 1)
-        self.NSN = str2int(miss_list, 0)
+        self.FMISID = str2int(miss_list, 0)
         self.DD = str2int(miss_list, 0)
         self.GROUND = str2int(miss_list, 3)
         self.GROUND06 = str2int(miss_list, 3)
@@ -83,8 +82,8 @@ class Subset:
                 self.LAT = str2float(v_a[k_a.index(key)], 0)
             elif key in ('LON', 'lon'):
                 self.LON = str2float(v_a[k_a.index(key)], 0)
-            elif key == 'NSN':
-                self.NSN = str2int(v_a[k_a.index(key)], 0)
+            elif key == 'FMISID':
+                self.FMISID = str2int(v_a[k_a.index(key)], 0)
             elif key == 'STATION_NAME':
                 self.LONG_STATION_NAME = str2str(v_a[k_a.index(key)])
             elif key == 'STATION_TYPE':
@@ -120,8 +119,6 @@ class Subset:
             elif key == 'SNOW':
                 self.SNOW = str2float(v_a[k_a.index(key)], 6)
                 self.SNOW_ARRAY[4] = self.SNOW
-            elif key == 'STATEID':
-                self.STATEID = str2int(v_a[k_a.index(key)], 1)
             elif key == 'SWE':
                 self.SWE = str2float(v_a[k_a.index(key)], 0)
             elif key == 'T':
@@ -137,12 +134,24 @@ class Subset:
                 self.YYYY = str2int(v_a[k_a.index(key)], 0)
 
     # 3.
+        self.STATEID = makse_stateid(self.NSUB)
         self.GR = ground_data(k_a, self.HH24, self.GROUND, self.GROUND06)
         self.SNOW_TOTAL = snow_depth_total(self.HH24, k_a, self.GR, self.SNOW_ARRAY)
         self.SDLWC = get_snow_density(self.SNOW_TOTAL, self.SWE)
         self.SENSOR = height_of_sensor(self.ELSNOW)
 
 # 4.
+
+def makse_stateid(nsub):
+    """
+    This function gives State identifier for each subset.
+    In Finland, state identifier is 613. If this code is used to encode other
+    countries data, this functions need to be modified.
+    """
+    int_list =  []
+    while len(int_list) < nsub:
+        int_list.append(613)
+    return int_list
 
 def get_wigos(wigos_id, key_id):
     """
