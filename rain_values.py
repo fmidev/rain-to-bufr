@@ -60,6 +60,7 @@ class Subset:
         self.SNOW_ARRAY = [self.SNOW06, self.SNOW18, self.SNOW_MAN, self.SNOW_AWS, self.SNOW]
         self.SWE = str2float(miss_list, 0)
         self.T = str2float(miss_list, 7)
+        self.WMO = str2int(miss_list, 0)
         self.WSI_IDS = str2int(miss_list, 0)
         self.WSI_IDI = str2int(miss_list, 0)
         self.WSI_INR = str2int(miss_list, 0)
@@ -125,6 +126,8 @@ class Subset:
                 self.T = str2float(v_a[k_a.index(key)], 7)
             elif key == 'temp':
                 self.T = str2float(v_a[k_a.index(key)], 0)
+            elif key == 'WMO':
+                self.WMO = str2int(v_a[k_a.index(key)], 0)
             elif key == 'WSI':
                 self.WSI_IDS = get_wigos(v_a[k_a.index(key)], 0)
                 self.WSI_IDI = get_wigos(v_a[k_a.index(key)], 1)
