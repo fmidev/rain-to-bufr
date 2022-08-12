@@ -183,7 +183,9 @@ def bufr_encode(ibufr, subs):
 
         # 007030: Height of station ground above mean sea level [m]
         # 007032: Height of sensor above local ground (or deck of marine platform) [m]
+            # Manual rain observation stations typically do not measure temperature.
         # 012101: Temperature/air temperature [K]
+            # Manual rain observation stations typically do not measure temperature.
         # 007032: Height of sensor above local ground (or deck of marine platform) [m]
         # 002177: Method of snow depth measurement
         # 020062: State of the ground
@@ -197,9 +199,11 @@ def bufr_encode(ibufr, subs):
     codes_set_array(ibufr, 'totalSnowDepth', subs.SNOW_TOTAL)
 
     # 013117: Snow density (liquid water content) [kg/m³]
-            # Saatetaan antaa synopissa [g/cm³ = 1000 kg/m³]
+        # This is SYKE-data and not (yet) included in inputdata
     # 003028: Method of snow water equivalent measurement
+        # This is SYKE-data and not (yet) included in inputdata
     # 013163: Snow water equivalent [kg/m²]
+        # This is SYKE-data and not (yet) included in inputdata
 
     codes_set_array(ibufr, 'snowDensityLiquidWaterContent', subs.SDLWC)
     codes_set_array(ibufr, 'methodOfSnowWaterEquivalentMeasurement', subs.MSWE)
