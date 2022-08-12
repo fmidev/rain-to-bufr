@@ -33,11 +33,10 @@ class Subset:
             miss_list.append('-1e+100')
             miss_char_list.append('')
         self.TTAAII = miss_list
-        # self.ELANEM = str2float(miss_list, oli 1)
         self.ELGROUND = str2float(miss_list, 0)
         self.ELSNOW = str2float(miss_list, 0)
         self.ELSTAT = str2float(miss_list, 0)
-        # self.ELTERM = str2float(miss_list, oli 4)
+        self.ELTERM = str2float(miss_list, 2)
         self.LAT = str2float(miss_list, 0)
         self.LON = str2float(miss_list, 0)
         self.LONG_STATION_NAME = miss_char_list
@@ -46,12 +45,12 @@ class Subset:
         self.STATEID = str2int(miss_list, 1)
         self.NSN = str2int(miss_list, 0)
         self.DD = str2int(miss_list, 0)
-        self.GROUND = str2int(miss_list, 2)
+        self.GROUND = str2int(miss_list, 3)
         self.GROUND06 = str2int(miss_list, 3)
         self.HH24 = str2int(miss_list, 0)
         self.MI = str2int(miss_list, 0)
         self.MM = str2int(miss_list, 0)
-        self.MSD = str2int(miss_list, 4)
+        self.METHODSNOW = str2int(miss_list, 4)
         self.MSWE = str2int(miss_list, 5)
         self.SDLWC = str2float(miss_list, 0)
         self.SNOW06 = str2float(miss_list, 6)
@@ -72,16 +71,14 @@ class Subset:
         for key in k_a:
             if key == 'TTAAII':
                 self.TTAAII = v_a[k_a.index(key)]
-            # elif key == 'ELANEM':
-                # self.ELANEM = str2float(v_a[k_a.index(key)], 1)
             elif key == 'ELGROUND':
                 self.ELGROUND = str2float(v_a[k_a.index(key)], 0)
             elif key == 'ELSNOW':
                 self.ELSNOW = str2float(v_a[k_a.index(key)], 0)
             elif key == 'ELSTAT':
                 self.ELSTAT = str2float(v_a[k_a.index(key)], 0)
-            # elif key == 'ELTERM':
-                # self.ELTERM = str2float(v_a[k_a.index(key)], 4)
+            elif key == 'ELTERM':
+                self.ELTERM = str2float(v_a[k_a.index(key)], 2)
             elif key in ('LAT', 'lat'):
                 self.LAT = str2float(v_a[k_a.index(key)], 0)
             elif key in ('LON', 'lon'):
@@ -95,9 +92,9 @@ class Subset:
             elif key in ('DD', 'day'):
                 self.DD = str2int(v_a[k_a.index(key)], 0)
             elif key == 'GROUND':
-                self.GROUND = str2int(v_a[k_a.index(key)], 2)
+                self.GROUND = str2int(v_a[k_a.index(key)], 3)
             elif key == 'GROUND06':
-                self.GROUND06 = str2int(v_a[k_a.index(key)], 2)
+                self.GROUND06 = str2int(v_a[k_a.index(key)], 3)
             elif key in ('HH24', 'hour'):
                 self.HH24 = str2int(v_a[k_a.index(key)], 0)
             elif key in ('MI', 'minute'):
@@ -143,7 +140,7 @@ class Subset:
         self.GR = ground_data(k_a, self.HH24, self.GROUND, self.GROUND06)
         self.SNOW_TOTAL = snow_depth_total(self.HH24, k_a, self.GR, self.SNOW_ARRAY)
         self.SDLWC = get_snow_density(self.SNOW_TOTAL, self.SWE)
-        self.SENSOR = height_of_sensor(self.T, self.ELSNOW)
+        self.SENSOR = height_of_sensor(self.ELSNOW)
 
 # 4.
 
@@ -218,22 +215,19 @@ def get_snow_density(depth, water_equivalent):
                 density.append(s_d)
     return density
 
-def height_of_sensor(t_list, snow_sensor):
+def height_of_sensor(snow_sensor):
     """
     This function makes a list of all the height of sensor above local ground
     (or deck of marine platform). In Snow observation sequence 307101, height of
     sensor depends on:
-        In all the other rain bufr messages, the first value in subset is 2, which should be
-        the height of the temperature sensor. Maybe elterm should be used??
-        If the temperature measurement is missing, the height of temperature measurement is missing.
-        The second value is the height of snow measurement sensor (snow_sensor)??
+        The first value is the height of temperature sensor. Temperature is
+        not included (yet) in rain data, so the height of temperature sensor is
+        reported to be missing.
+        The second value is the height of snow measurement sensor (snow_sensor).
     """
     float_list = []
-    for i in range (0, len(t_list)):
-        if t_list[i] == missD:
-            float_list.append(missD)
-        else:
-            float_list.append(2.00)
+    for i in range (0, len(snow_sensor)):
+        float_list.append(missD)
         float_list.append(snow_sensor[i])
     return float_list
 
@@ -244,7 +238,7 @@ def ground_data(key_list, hh_list, list1, list2):
     GROUND06 (list2) are used. If not, then values of GROUND (list1) are used.
     g_bufr array is used to map state of ground values from FMI data to global values used
     in bufr data. Source: https://wiki.fmi.fi/pages/viewpage.action?pageId=29868373.
-    The value 31 stands for missing value.
+    The value 31 stands for a missing value.
     """
     g_bufr = [0, 1, 2, 4, 11, 15, 12, 13, 16, 17]
     int_list = []
@@ -268,11 +262,19 @@ def snow_depth(snow_value, gr_value):
     This function chooses a right value of snow depth. It depends on:
         snow_value = snow depth in data
         gr_value = state of ground value in data
+    Input data gives value -1 (-1 cm = -0.01 m) if there is no snow. This value is
+    changed to 0.0 m.
+    Input data gives value 0 (0 cm = 0.00 m) if there is little
+    (less than 0.005 m) snow. This value is changed to -0.01 m if snow cover is continuous.
+    If there is little (less than 0.005 m) snow and the snow cover is not continuous,
+    this value is changed to -0.02 m. Snow cover is not continuous when state of ground
+    values are 11, 12, 15 or 16.
+
     """
     value = snow_value
     if snow_value == 0:
         value = -0.01
-        if gr_value in (11, 12):
+        if gr_value in (11, 12, 15, 16):
             value = -0.02
     elif snow_value == -0.01:
         value = 0.0
@@ -316,7 +318,7 @@ def make_missing(key_id):
     value = miss
     if key_id == 1:
         value = 1023
-    elif 2 <= key_id <= 3:
+    elif key_id == 3:
         value = 31
     elif key_id == 4:
         value = 15
@@ -353,8 +355,8 @@ def str2float(str_list, key_id):
     for i in range (0, len(str_list)):
         if str_list[i] == '-1e+100':
             float_list.append(float(str_list[i]))
-        # elif key_id == 4 and 1.5 <= float(str_list[i])< 3.0: # liittyy eltermiin
-        #    float_list.append(2.00)
+        elif key_id == 2 and 1.5 <= float(str_list[i]) < 3.0:
+            float_list.append(2.00)
         elif key_id == 6:
             float_list.append(float(str_list[i])* 0.010)
         elif key_id == 7:
