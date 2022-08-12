@@ -146,11 +146,13 @@ def bufr_encode(ibufr, subs):
         # National station identification:
         # 301089:
             # 001101: State identifier  0-1022 ja 1023 on missing value
+            #         Finland =  613
             # 001102: National station number (Surface station
             #         identification; time, horizontal and vertical coordinates)
+            #         FMISID is used in Finland
 
     codes_set_array(ibufr, 'stateIdentifier', subs.STATEID)
-    codes_set_array(ibufr, 'nationalStationNumber', subs.NSN) # käytetään ehkä aseman FMISID-numeroa
+    codes_set_array(ibufr, 'nationalStationNumber', subs.FMISID)
 
         # 001019: Long station or site name
         # 002001: Type of station
