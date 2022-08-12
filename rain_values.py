@@ -240,28 +240,27 @@ def height_of_sensor(t_list, snow_sensor):
 def ground_data(key_list, hh_list, list1, list2):
     """
     This function chooses state of ground data from GROUND06 and GROUND and modifies it.
-        If key_list includes key "GROUND06" and hh_list = HH24 is 6, the values of
-        GROUND06 (list2) are used. If not, then values of GROUND (list1) are used.
-        Source: https://wiki.fmi.fi/pages/viewpage.action?pageId=29868373 where the values of
-        g_bufr[3] and g_bufr[4] = 11 are not clear.
-        g_bufr[3] and g_bufr[4] = 11 are decided by the knowledge of previous F77 program:
-        https://gitlab.fmi.fi/datatuotanto/bdmlegacy/blob/master/routines/run/bdmlegacy/main/synop2bufr.F
+    If key_list includes key "GROUND06" and hh_list = HH24 is 6, the values of
+    GROUND06 (list2) are used. If not, then values of GROUND (list1) are used.
+    g_bufr array is used to map state of ground values from FMI data to global values used
+    in bufr data. Source: https://wiki.fmi.fi/pages/viewpage.action?pageId=29868373.
+    The value 31 stands for missing value.
     """
-    g_bufr = [1, 2, 4, 11, 11, 12, 13, 16, 17]
+    g_bufr = [0, 1, 2, 4, 11, 15, 12, 13, 16, 17]
     int_list = []
     for i in range (0, len(hh_list)):
         if hh_list[i] == 6 and 'GROUND06' in key_list:
             ind = list2[i]
-            if 1 <= ind <= 9:
-                int_list.append(g_bufr[ind-1])
+            if 0 <= ind <= 9:
+                int_list.append(g_bufr[ind])
             else:
-                int_list.append(ind)
+                int_list.append(31)
         else:
             ind = list1[i]
-            if 1 <= ind <= 9:
-                int_list.append(g_bufr[ind-1])
+            if 0 <= ind <= 9:
+                int_list.append(g_bufr[ind])
             else:
-                int_list.append(ind)
+                int_list.append(31)
     return int_list
 
 def snow_depth(snow_value, gr_value):
