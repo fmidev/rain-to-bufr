@@ -1,22 +1,22 @@
 """
-read_synopfile.py reads data from synop file and converts it to a form:
+read_dat_file.py reads data from dat file and converts it to a form:
 [[array to name the output file], [[ [key=value], [key=value], ...]]].
 """
 import sys
 
-def read(synop_file):
+def read(dat_file):
     """
-    1. Reads lines from input_file and checks (check_name) if the file's first row
+    1. Reads lines from input_file (dat_file) and checks (check_name) if the file's first row
        contains right parts to give a name to the output file. After that it checks (check_data)
-       if the synop data in input_file contains right parts for fetching the data.
+       if the data in input_file contains right parts for fetching the data.
     2. Sends the first row of input file to read_filename to get the name for the
        output file. After that it checks if output has a right number of values for naming
        the file.
-    3. Calls read_synop to get the keys and the values from input file.
+    3. Calls read_dat to get the keys and the values from input file.
     """
 
     # 1.
-    rows_in_input_file = synop_file.readlines()
+    rows_in_input_file = dat_file.readlines()
     check_name(rows_in_input_file)
     check_data(rows_in_input_file)
 
@@ -25,7 +25,7 @@ def read(synop_file):
     if len(output) != 4:
         print_error_message(0, '\n')
     # 3.
-    data = read_synop(rows_in_input_file[1:])
+    data = read_dat(rows_in_input_file[1:])
     data_in = [output, data]
 
     return data_in
@@ -33,31 +33,30 @@ def read(synop_file):
 def print_error_message(head_message, text):
     """
     This function prints out error message and stops program.
-        If head_message = 0: Error is with naming the bufr file according to the first row of
-        synop data file.
-        If head_message = 1: Error is with the data structure in synop file.
+        If head_message = 0: Error is in the first row, which is used to name the bufr file.
+        If head_message = 1: Error is in the data structure.
         Function gets argument text, which adds information to the error text.
     """
-    print('\nError in synop data:\n')
+    print('\nError in the data:\n')
     if head_message == 0:
         print('Error with naming the bufr file.')
-        print('The first row of synop data should be: ')
+        print('The first data row in the input file should be: ')
         print('FILENAME: /path/to/file/TTAAII_year-month-day_hour:minute_something.dat')
         print(text)
     elif head_message == 1:
-        print('Row in synop data with n data values should be: ')
+        print('Data row in input file with n data values should be: ')
         print('keyname1=value1;keyname2=value2;keyname3=value3;...;keynamen=valuen*')
         print(text)
     sys.exit(1)
 
 def check_name(data):
     """
-    This function checks if the first row in synop data (data) is written correctly.
+    This function checks if the first row in data (data) is written correctly.
     """
     try:
         test = data[0]
     except IndexError:
-        print_error_message(0, 'Synop file is empty!\n')
+        print_error_message(0, 'Input file is empty!\n')
 
     if 'FILENAME: ' not in data[0]:
         print_error_message(0, '"FILENAME:  " is missing!\n')
@@ -93,10 +92,10 @@ def check_name(data):
 
 def check_value(value, row_index, key_value_index, array_lenght):
     """
-    This function check if the synop data values are either numbers or "/". Also the
+    This function check if the data values are either numbers or "/". Also the
     last value is checked to contain "*" sign.
     """
-    message_start = 'Synop file has wrongly written data in row '
+    message_start = 'Input file has wrongly written data in row '
     try:
         if value != '/*\n' and key_value_index == array_lenght - 1:
             last_value = value.split('*')
@@ -104,34 +103,33 @@ def check_value(value, row_index, key_value_index, array_lenght):
         elif value != '/' and key_value_index != array_lenght - 1:
             float(value)
     except IndexError:
-        message = message_start + str(row_index) + '.\n'
+        message = message_start + str(row_index + 1) + '.\n'
         print_error_message(1, message)
     except ValueError:
-        message = message_start + str(row_index) + '.\n' + 'No number or / after = sign.\n'
+        message = message_start + str(row_index + 1) + '.\n' + 'No number or / after = sign.\n'
         print_error_message(1, message)
 
 def check_data(data):
     """
-    This function checks if the data section in synop file is written correctly.
-    Argument data is the data in synop file.
+    This function checks if the data section in input file is written correctly.
     """
-    message_start = 'Synop file has wrongly written data in row '
+    message_start = 'Input file has wrongly written data in row '
     try:
         data[1]
     except IndexError:
-        print_error_message(1, 'Synop file seems not to have any data.\n')
+        print_error_message(1, 'Input file seems to not have any data.\n')
 
     for i in range(1, len(data)):
         row = data[i]
         if ';' not in data[i] or '=' not in data[i] or '*' not in data[i]:
-            message = message_start + str(i) + '.\n'
+            message = message_start + str(i+1) + '.\n'
             print_error_message(1, message)
         elif row[-1] in ('\n', '*'):
             if row[-1] == '\n' and row[-2] != '*':
-                message = message_start + str(i) + '.\n' + 'Data row does not end to sign "*".\n'
+                message = message_start + str(i+1) + '.\n' + 'Data row does not end to sign "*".\n'
                 print_error_message(1, message)
         else:
-            message = message_start + str(i) + '.\n' + 'Data row does not end to sign "*".\n'
+            message = message_start + str(i+1) + '.\n' + 'Data row does not end to sign "*".\n'
             print_error_message(1, message)
 
     no_number_in_value_list = [
@@ -147,7 +145,7 @@ def check_data(data):
                 if key_value[0] not in no_number_in_value_list:
                     check_value(key_value[1], i, j, len(key_value_pair))
             else:
-                message = message_start + str(i) + '.\n' + 'No "=" sign between key and value.\n'
+                message = message_start + str(i+1) + '.\n' + 'No "=" sign between key and value.\n'
                 print_error_message(1, message)
 
 def read_filename(row):
@@ -178,9 +176,9 @@ def read_filename(row):
 
     return output
 
-def read_synop(rows):
+def read_dat(rows):
     """
-    Separates synop data to key and value arrays:
+    Separates data to key and value arrays:
         1. Splits rows from ";", -> [ [key=value], [key=value], ...]
         2. Splits: [key=value] in each row to [key, value] and the last value from "*".
     """

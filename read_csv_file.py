@@ -1,5 +1,5 @@
 """
-read_csvfile.py transfers csv data to a form which can be easily converted to bufr message.
+read_csv_file.py transfers csv data to a form which can be converted to bufr message.
 """
 import sys
 
@@ -49,10 +49,10 @@ def check_data(data):
         print_error_message(0, message)
     for i in range(1, len(data)):
         if '|' not in data[i]:
-            message = 'Csv file has wrongly written data in row ' + str(i) + '.\n'
+            message = 'Csv file has wrongly written data in row ' + str(i+1) + '.\n'
             print_error_message(1, message)
         elif number_of_data_points != data[i].count('|'):
-            message = 'Number of values differ from number of key names in row ' + str(i) + '.\n'
+            message = 'Number of values differ from number of key names in row ' + str(i+1) + '.\n'
             print_error_message(1, message)
 
     message_start = 'Csv file has wrongly written data in row '
@@ -65,9 +65,8 @@ def check_data(data):
                 try:
                     float(values[j])
                 except ValueError:
-                    message =  message_start + str(i) + '.\n' 'Values should be numbers.\n'
+                    message =  message_start + str(i+1) + '.\n' 'Values should be numbers.\n'
                     print_error_message(1, message)
-
 
 def read_filename(row):
     """

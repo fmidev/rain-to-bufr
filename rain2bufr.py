@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-rain2bufr.py is the main program which converts synop data to bufr message (edition 4).
+rain2bufr.py is the main program which converts rain observation data to a bufr message (edition 4).
 Run program by command: python3 rain2bufr.py name_of_the_data_file
 """
 import sys
@@ -15,12 +15,10 @@ VERBOSE = 1
 
 def message_encoding(input_file, type_of_data):
     """
-    Main function sends input file here.
-    1. Sends:
-        - input_file to read_inputfile module which returns the data in key-value-pair format.
-        - data type weather it is synop data (= 0) or csv data (= 1)
-        After this the first part of data (output file naming information)
-        is separated from key name and value data.
+    1. Main function sends input file (input_file) and its type (type_of_data) here.
+       Input_file and its type is send to read_inputfile module which returns the data
+       in key-value-pair format. After this the first part of data
+       (output file naming information) is separated from key name and value data.
     2. Values are separated from the data's key-value -pairs by separate_keys_and_values
        module's "get_keys" -function.
        "separate_keys_and_values" -module's "are_all_the_rows_similar" -function is used to
@@ -78,7 +76,7 @@ def message_encoding(input_file, type_of_data):
         if VERBOSE:
             traceback.print_exc(file=sys.stderr)
         else:
-            sys.stderr.write(err.msg + '\n')
+            print(err)
         codes_release(bufr)
         sys.exit(1)
 
@@ -152,7 +150,7 @@ def bufr_encode(ibufr, subs):
             #         FMISID is used in Finland
 
     codes_set_array(ibufr, 'stateIdentifier', subs.STATEID)
-    codes_set_array(ibufr, 'nationalStationNumber', subs.FMISID)
+    codes_set_array(ibufr, 'nationalStationNumber', subs.NSI)
 
         # 001019: Long station or site name
         # 002001: Type of station
@@ -222,32 +220,32 @@ def main():
     The output file is named by input file information.
     """
     if len(sys.argv) < 2:
-        print('Usage: ', sys.argv[0], ' synop_filename', file=sys.stderr)
+        print('Usage: ', sys.argv[0], ' input_filename', file=sys.stderr)
         sys.exit(1)
-    synop_filename = sys.argv[1]
+    input_filename = sys.argv[1]
 
-    with open(synop_filename, 'r', encoding="utf8") as synop_file:
-        print('synop data from file: ', synop_filename)
-        data_type = synop_filename.split('.')
+    with open(input_filename, 'r', encoding="utf8") as in_file:
+        print('input data from file: ', input_filename)
+        data_type = input_filename.split('.')
         data_type = data_type[len(data_type) - 1]
         try:
-            bufr_filename = message_encoding(synop_file, data_type)
+            bufr_filename = message_encoding(in_file, data_type)
         except CodesInternalError as err:
             if VERBOSE:
                 traceback.print_exc(file=sys.stderr)
             else:
-                sys.stderr.write(err.msg + '\n')
-            synop_file.close()
+                print(err)
+            in_file.close()
             sys.exit(1)
         except Exception as err:
             if VERBOSE:
                 traceback.print_exc(file=sys.stderr)
             else:
                 print(err)
-            synop_file.close()
+            in_file.close()
             sys.exit(1)
         finally:
-            synop_file.close()
+            in_file.close()
 
     print('bufr data in file: ', bufr_filename)
 
